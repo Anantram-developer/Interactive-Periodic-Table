@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Periodic Table</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: radial-gradient(circle, #222, #000);
+            color: white;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        h1 {
+            margin-bottom: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            overflow-x: auto;
+        }
+        
+        .table {
+            display: grid;
+            grid-template-columns: repeat(18, 60px);
+            grid-template-rows: repeat(10, 60px);
+            gap: 3px;
+            justify-content: center;
+        }
+        
+        .element {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.3s ease, background 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            font-size: 12px;
+        }
+        
+        .element:hover {
+            transform: scale(1.2);
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 10;
+        }
+        
+        .symbol {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .number {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 10px;
+        }
+        
+        .info {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            width: 200px;
+            display: none;
+            z-index: 100;
+        }
+        
+        .element:hover .info {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        .blank {
+            grid-column: span 1;
+            grid-row: span 1;
+        }
+        
+        .lanthanide-row, .actinide-row {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(15, 60px);
+            gap: 3px;
+            justify-content: center;
+        }
+        
+        .category-metal { background-color: rgba(78, 124, 246, 0.3); }
+        .category-alkali { background-color: rgba(255, 77, 77, 0.3); }
+        .category-alkaline { background-color: rgba(255, 166, 77, 0.3); }
+        .category-transition { background-color: rgba(255, 230, 77, 0.3); }
+        .category-post-transition { background-color: rgba(122, 184, 122, 0.3); }
+        .category-metalloid { background-color: rgba(115, 194, 251, 0.3); }
+        .category-nonmetal { background-color: rgba(77, 166, 255, 0.3); }
+        .category-halogen { background-color: rgba(191, 128, 255, 0.3); }
+        .category-noble { background-color: rgba(242, 88, 207, 0.3); }
+        .category-lanthanide { background-color: rgba(128, 226, 126, 0.3); }
+        .category-actinide { background-color: rgba(255, 153, 204, 0.3); }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 0 10px;
+        }
+        
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            margin-right: 5px;
+            border-radius: 3px;
+        }
+        
+        @media (max-width: 1200px) {
+            .table {
+                grid-template-columns: repeat(18, 50px);
+                grid-template-rows: repeat(10, 50px);
+            }
+            
+            .element {
+                width: 50px;
+                height: 50px;
+                font-size: 10px;
+            }
+            
+            .symbol {
+                font-size: 16px;
+            }
+            
+            .lanthanide-row, .actinide-row {
+                grid-template-columns: repeat(15, 50px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Interactive Periodic Table</h1>
+    
+    <div class="container">
+        <div class="table" id="periodic-table"></div>
+        
+        <div class="lanthanide-row" id="lanthanide-row"></div>
+        <div class="actinide-row" id="actinide-row"></div>
+        
+        <div class="legend">
+            <div class="legend-item"><div class="legend-color category-alkali"></div>Alkali Metals</div>
+            <div class="legend-item"><div class="legend-color category-alkaline"></div>Alkaline Earth Metals</div>
+            <div class="legend-item"><div class="legend-color category-transition"></div>Transition Metals</div>
+            <div class="legend-item"><div class="legend-color category-post-transition"></div>Post-Transition Metals</div>
+            <div class="legend-item"><div class="legend-color category-metalloid"></div>Metalloids</div>
+            <div class="legend-item"><div class="legend-color category-nonmetal"></div>Nonmetals</div>
+            <div class="legend-item"><div class="legend-color category-halogen"></div>Halogens</div>
+            <div class="legend-item"><div class="legend-color category-noble"></div>Noble Gases</div>
+            <div class="legend-item"><div class="legend-color category-lanthanide"></div>Lanthanides</div>
+            <div class="legend-item"><div class="legend-color category-actinide"></div>Actinides</div>
+        </div>
+    </div>
+    
+    <script>
+        const elements = [
+            { name: "Hydrogen", symbol: "H", number: 1, category: "nonmetal", row: 1, col: 1 },
+            { name: "Helium", symbol: "He", number: 2, category: "noble", row: 1, col: 18 },
+            { name: "Lithium", symbol: "Li", number: 3, category: "alkali", row: 2, col: 1 },
+            { name: "Beryllium", symbol: "Be", number: 4, category: "alkaline", row: 2, col: 2 },
+            { name: "Boron", symbol: "B", number: 5, category: "metalloid", row: 2, col: 13 },
+            { name: "Carbon", symbol: "C", number: 6, category: "nonmetal", row: 2, col: 14 },
+            { name: "Nitrogen", symbol: "N", number: 7, category: "nonmetal", row: 2, col: 15 },
+            { name: "Oxygen", symbol: "O", number: 8, category: "nonmetal", row: 2, col: 16 },
+            { name: "Fluorine", symbol: "F", number: 9, category: "halogen", row: 2, col: 17 },
+            { name: "Neon", symbol: "Ne", number: 10, category: "noble", row: 2, col: 18 },
+            { name: "Sodium", symbol: "Na", number: 11, category: "alkali", row: 3, col: 1 },
+            { name: "Magnesium", symbol: "Mg", number: 12, category: "alkaline", row: 3, col: 2 },
+            { name: "Aluminum", symbol: "Al", number: 13, category: "post-transition", row: 3, col: 13 },
+            { name: "Silicon", symbol: "Si", number: 14, category: "metalloid", row: 3, col: 14 },
+            { name: "Phosphorus", symbol: "P", number: 15, category: "nonmetal", row: 3, col: 15 },
+            { name: "Sulfur", symbol: "S", number: 16, category: "nonmetal", row: 3, col: 16 },
+            { name: "Chlorine", symbol: "Cl", number: 17, category: "halogen", row: 3, col: 17 },
+            { name: "Argon", symbol: "Ar", number: 18, category: "noble", row: 3, col: 18 },
+            { name: "Potassium", symbol: "K", number: 19, category: "alkali", row: 4, col: 1 },
+            { name: "Calcium", symbol: "Ca", number: 20, category: "alkaline", row: 4, col: 2 },
+            { name: "Scandium", symbol: "Sc", number: 21, category: "transition", row: 4, col: 3 },
+            { name: "Titanium", symbol: "Ti", number: 22, category: "transition", row: 4, col: 4 },
+            { name: "Vanadium", symbol: "V", number: 23, category: "transition", row: 4, col: 5 },
+            { name: "Chromium", symbol: "Cr", number: 24, category: "transition", row: 4, col: 6 },
+            { name: "Manganese", symbol: "Mn", number: 25, category: "transition", row: 4, col: 7 },
+            { name: "Iron", symbol: "Fe", number: 26, category: "transition", row: 4, col: 8 },
+            { name: "Cobalt", symbol: "Co", number: 27, category: "transition", row: 4, col: 9 },
+            { name: "Nickel", symbol: "Ni", number: 28, category: "transition", row: 4, col: 10 },
+            { name: "Copper", symbol: "Cu", number: 29, category: "transition", row: 4, col: 11 },
+            { name: "Zinc", symbol: "Zn", number: 30, category: "transition", row: 4, col: 12 },
+            { name: "Gallium", symbol: "Ga", number: 31, category: "post-transition", row: 4, col: 13 },
+            { name: "Germanium", symbol: "Ge", number: 32, category: "metalloid", row: 4, col: 14 },
+            { name: "Arsenic", symbol: "As", number: 33, category: "metalloid", row: 4, col: 15 },
+            { name: "Selenium", symbol: "Se", number: 34, category: "nonmetal", row: 4, col: 16 },
+            { name: "Bromine", symbol: "Br", number: 35, category: "halogen", row: 4, col: 17 },
+            { name: "Krypton", symbol: "Kr", number: 36, category: "noble", row: 4, col: 18 },
+            { name: "Rubidium", symbol: "Rb", number: 37, category: "alkali", row: 5, col: 1 },
+            { name: "Strontium", symbol: "Sr", number: 38, category: "alkaline", row: 5, col: 2 },
+            { name: "Yttrium", symbol: "Y", number: 39, category: "transition", row: 5, col: 3 },
+            { name: "Zirconium", symbol: "Zr", number: 40, category: "transition", row: 5, col: 4 },
+            { name: "Niobium", symbol: "Nb", number: 41, category: "transition", row: 5, col: 5 },
+            { name: "Molybdenum", symbol: "Mo", number: 42, category: "transition", row: 5, col: 6 },
+            { name: "Technetium", symbol: "Tc", number: 43, category: "transition", row: 5, col: 7 },
+            { name: "Ruthenium", symbol: "Ru", number: 44, category: "transition", row: 5, col: 8 },
+            { name: "Rhodium", symbol: "Rh", number: 45, category: "transition", row: 5, col: 9 },
+            { name: "Palladium", symbol: "Pd", number: 46, category: "transition", row: 5, col: 10 },
+            { name: "Silver", symbol: "Ag", number: 47, category: "transition", row: 5, col: 11 },
+            { name: "Cadmium", symbol: "Cd", number: 48, category: "transition", row: 5, col: 12 },
+            { name: "Indium", symbol: "In", number: 49, category: "post-transition", row: 5, col: 13 },
+            { name: "Tin", symbol: "Sn", number: 50, category: "post-transition", row: 5, col: 14 },
+            { name: "Antimony", symbol: "Sb", number: 51, category: "metalloid", row: 5, col: 15 },
+            { name: "Tellurium", symbol: "Te", number: 52, category: "metalloid", row: 5, col: 16 },
+            { name: "Iodine", symbol: "I", number: 53, category: "halogen", row: 5, col: 17 },
+            { name: "Xenon", symbol: "Xe", number: 54, category: "noble", row: 5, col: 18 },
+            { name: "Cesium", symbol: "Cs", number: 55, category: "alkali", row: 6, col: 1 },
+            { name: "Barium", symbol: "Ba", number: 56, category: "alkaline", row: 6, col: 2 },
+            { name: "Lanthanum", symbol: "La", number: 57, category: "lanthanide", row: 6, col: 3, special: "lanthanide", specialRow: 8, specialCol: 3 },
+            { name: "Cerium", symbol: "Ce", number: 58, category: "lanthanide", row: 8, col: 4 },
+            { name: "Praseodymium", symbol: "Pr", number: 59, category: "lanthanide", row: 8, col: 5 },
+            { name: "Neodymium", symbol: "Nd", number: 60, category: "lanthanide", row: 8, col: 6 },
+            { name: "Promethium", symbol: "Pm", number: 61, category: "lanthanide", row: 8, col: 7 },
+            { name: "Samarium", symbol: "Sm", number: 62, category: "lanthanide", row: 8, col: 8 },
+            { name: "Europium", symbol: "Eu", number: 63, category: "lanthanide", row: 8, col: 9 },
+            { name: "Gadolinium", symbol: "Gd", number: 64, category: "lanthanide", row: 8, col: 10 },
+            { name: "Terbium", symbol: "Tb", number: 65, category: "lanthanide", row: 8, col: 11 },
+            { name: "Dysprosium", symbol: "Dy", number: 66, category: "lanthanide", row: 8, col: 12 },
+            { name: "Holmium", symbol: "Ho", number: 67, category: "lanthanide", row: 8, col: 13 },
+            { name: "Erbium", symbol: "Er", number: 68, category: "lanthanide", row: 8, col: 14 },
+            { name: "Thulium", symbol: "Tm", number: 69, category: "lanthanide", row: 8, col: 15 },
+            { name: "Ytterbium", symbol: "Yb", number: 70, category: "lanthanide", row: 8, col: 16 },
+            { name: "Lutetium", symbol: "Lu", number: 71, category: "lanthanide", row: 8, col: 17 },
+            { name: "Hafnium", symbol: "Hf", number: 72, category: "transition", row: 6, col: 4 },
+            { name: "Tantalum", symbol: "Ta", number: 73, category: "transition", row: 6, col: 5 },
+            { name: "Tungsten", symbol: "W", number: 74, category: "transition", row: 6, col: 6 },
+            { name: "Rhenium", symbol: "Re", number: 75, category: "transition", row: 6, col: 7 },
+            { name: "Osmium", symbol: "Os", number: 76, category: "transition", row: 6, col: 8 },
+            { name: "Iridium", symbol: "Ir", number: 77, category: "transition", row: 6, col: 9 },
+            { name: "Platinum", symbol: "Pt", number: 78, category: "transition", row: 6, col: 10 },
+            { name: "Gold", symbol: "Au", number: 79, category: "transition", row: 6, col: 11 },
+            { name: "Mercury", symbol: "Hg", number: 80, category: "transition", row: 6, col: 12 },
+            { name: "Thallium", symbol: "Tl", number: 81, category: "post-transition", row: 6, col: 13 },
+            { name: "Lead", symbol: "Pb", number: 82, category: "post-transition", row: 6, col: 14 },
+            { name: "Bismuth", symbol: "Bi", number: 83, category: "post-transition", row: 6, col: 15 },
+            { name: "Polonium", symbol: "Po", number: 84, category: "post-transition", row: 6, col: 16 },
+            { name: "Astatine", symbol: "At", number: 85, category: "halogen", row: 6, col: 17 },
+            { name: "Radon", symbol: "Rn", number: 86, category: "noble", row: 6, col: 18 },
+            { name: "Francium", symbol: "Fr", number: 87, category: "alkali", row: 7, col: 1 },
+            { name: "Radium", symbol: "Ra", number: 88, category: "alkaline", row: 7, col: 2 },
+            { name: "Actinium", symbol: "Ac", number: 89, category: "actinide", row: 7, col: 3, special: "actinide", specialRow: 9, specialCol: 3 },
+            { name: "Thorium", symbol: "Th", number: 90, category: "actinide", row: 9, col: 4 },
+            { name: "Protactinium", symbol: "Pa", number: 91, category: "actinide", row: 9, col: 5 },
+            { name: "Uranium", symbol: "U", number: 92, category: "actinide", row: 9, col: 6 },
+            { name: "Neptunium", symbol: "Np", number: 93, category: "actinide", row: 9, col: 7 },
+            { name: "Plutonium", symbol: "Pu", number: 94, category: "actinide", row: 9, col: 8 },
+            { name: "Americium", symbol: "Am", number: 95, category: "actinide", row: 9, col: 9 },
+            { name: "Curium", symbol: "Cm", number: 96, category: "actinide", row: 9, col: 10 },
+            { name: "Berkelium", symbol: "Bk", number: 97, category: "actinide", row: 9, col: 11 },
+            { name: "Californium", symbol: "Cf", number: 98, category: "actinide", row: 9, col: 12 },
+            { name: "Einsteinium", symbol: "Es", number: 99, category: "actinide", row: 9, col: 13 },
+            { name: "Fermium", symbol: "Fm", number: 100, category: "actinide", row: 9, col: 14 },
+            { name: "Mendelevium", symbol: "Md", number: 101, category: "actinide", row: 9, col: 15 },
+            { name: "Nobelium", symbol: "No", number: 102, category: "actinide", row: 9, col: 16 },
+            { name: "Lawrencium", symbol: "Lr", number: 103, category: "actinide", row: 9, col: 17 },
+            { name: "Rutherfordium", symbol: "Rf", number: 104, category: "transition", row: 7, col: 4 },
+            { name: "Dubnium", symbol: "Db", number: 105, category: "transition", row: 7, col: 5 },
+            { name: "Seaborgium", symbol: "Sg", number: 106, category: "transition", row: 7, col: 6 },
+            { name: "Bohrium", symbol: "Bh", number: 107, category: "transition", row: 7, col: 7 },
+            { name: "Hassium", symbol: "Hs", number: 108, category: "transition", row: 7, col: 8 },
+            { name: "Meitnerium", symbol: "Mt", number: 109, category: "transition", row: 7, col: 9 },
+            { name: "Darmstadtium", symbol: "Ds", number: 110, category: "transition", row: 7, col: 10 },
+            { name: "Roentgenium", symbol: "Rg", number: 111, category: "transition", row: 7, col: 11 },
+            { name: "Copernicium", symbol: "Cn", number: 112, category: "transition", row: 7, col: 12 },
+            { name: "Nihonium", symbol: "Nh", number: 113, category: "post-transition", row: 7, col: 13 },
+            { name: "Flerovium", symbol: "Fl", number: 114, category: "post-transition", row: 7, col: 14 },
+            { name: "Moscovium", symbol: "Mc", number: 115, category: "post-transition", row: 7, col: 15 },
+            { name: "Livermorium", symbol: "Lv", number: 116, category: "post-transition", row: 7, col: 16 },
+            { name: "Tennessine", symbol: "Ts", number: 117, category: "halogen", row: 7, col: 17 },
+            { name: "Oganesson", symbol: "Og", number: 118, category: "noble", row: 7, col: 18 }
+        ];
+
+        const table = document.getElementById("periodic-table");
+        const lanthanideRow = document.getElementById("lanthanide-row");
+        const actinideRow = document.getElementById("actinide-row");
+        
+        // Create a 7x18 grid with blank spaces
+        for (let row = 1; row <= 7; row++) {
+            for (let col = 1; col <= 18; col++) {
+                // Skip places where elements don't exist in the standard table
+                if ((row === 1 && col > 1 && col < 18) || 
+                    (row >= 2 && row <= 7 && col >= 3 && col <= 12 && !(row >= 6 && row <= 7 && col === 3))) {
+                    
+                    // For rows 6-7, cols 3-12 are special (lanthanides/actinides)
+                    if (!((row === 6 || row === 7) && col >= 3 && col <= 12 && row < 8)) {
+                        const blank = document.createElement("div");
+                        blank.classList.add("blank");
+                        table.appendChild(blank);
+                    }
+                    continue;
+                }
+                
+                // Find element at this position
+                const element = elements.find(e => e.row === row && e.col === col);
+                
+                if (element) {
+                    createElementDiv(element, table);
+                } else {
+                    const blank = document.createElement("div");
+                    blank.classList.add("blank");
+                    table.appendChild(blank);
+                }
+            }
+        }
+        
+        // Create lanthanide and actinide rows
+        const lanthanides = elements.filter(e => e.row === 8);
+        const actinides = elements.filter(e => e.row === 9);
+        
+        // Add label divs for the lanthanide and actinide rows
+        const lanthanideLabel = document.createElement("div");
+        lanthanideLabel.textContent = "Lanthanides";
+        lanthanideLabel.classList.add("element", "category-lanthanide");
+        lanthanideLabel.style.gridColumn = "1 / span 2";
+        lanthanideRow.appendChild(lanthanideLabel);
+        
+        const actinideLabel = document.createElement("div");
+        actinideLabel.textContent = "Actinides";
+        actinideLabel.classList.add("element", "category-actinide");
+        actinideLabel.style.gridColumn = "1 / span 2";
+        actinideRow.appendChild(actinideLabel);
+        
+        // Fill the lanthanide and actinide rows
+        lanthanides.forEach(element => {
+            createElementDiv(element, lanthanideRow);
+        });
+        
+        actinides.forEach(element => {
+            createElementDiv(element, actinideRow);
+        });
+        
+        function createElementDiv(element, container) {
+            const div = document.createElement("div");
+            div.classList.add("element", `category-${element.category}`);
+            
+            // Add the atomic number
+            const numberSpan = document.createElement("span");
+            numberSpan.classList.add("number");
+            numberSpan.textContent = element.number;
+            div.appendChild(numberSpan);
+            
+            // Add the element symbol
+            const symbolSpan = document.createElement("span");
+            symbolSpan.classList.add("symbol");
+            symbolSpan.textContent = element.symbol;
+            div.appendChild(symbolSpan);
+            
+            // Add info popup
+            const infoDiv = document.createElement("div");
+            infoDiv.classList.add("info");
+            infoDiv.innerHTML = `
+                <strong>${element.name}</strong><br>
+                Atomic Number: ${element.number}<br>
+                Symbol: ${element.symbol}<br>
+                Category: ${element.category.replace('-', ' ')}
+            `;
+            div.appendChild(infoDiv);
+            
+            // Add click event
+            div.addEventListener("click", () => {
+                const details = `
+                    Element: ${element.name}
+                    Symbol: ${element.symbol}
+                    Atomic Number: ${element.number}
+                    Category: ${element.category.replace('-', ' ')}
+                `;
+                alert(details);
+            });
+            
+            container.appendChild(div);
+        }
+    </script>
+</body>
+</html>
